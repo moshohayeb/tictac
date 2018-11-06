@@ -43,7 +43,7 @@ impl Render for Tile {
     fn render(&self) -> &'static str {
         match self {
             Option::Some(v) if v == &Piece::X => "X",
-            Option::Some(v) if v == &Piece::O => "Y",
+            Option::Some(v) if v == &Piece::O => "O",
             Option::None => ".",
             _ => "!",
         }
@@ -123,7 +123,7 @@ impl Game {
         println!("");
     }
 
-    fn update_winner_piece(&mut self) {
+    fn update(&mut self) {
         let board = &self.board;
 
         // diagonal
@@ -165,7 +165,6 @@ impl Game {
 
         self.board[row][col] = Some(piece);
         self.turn = !piece;
-        self.update_winner_piece();
         Ok(())
     }
 
@@ -174,15 +173,10 @@ impl Game {
             return true;
         }
 
-        for i in 0..=2 {
-            for j in 0..=2 {
-                if let None = self.board[i][j] {
-                    return false;
-                }
-            }
-        }
-
-        true
+        // see if all slots are occupied
+        self.board.iter().flatten().all(|v| {
+            *v != None
+        })
     }
 
     pub fn start(&mut self) {
@@ -192,8 +186,8 @@ impl Game {
             if let Err(why) = self.play(self.turn, col, row) {
                 println!("err: {:?}...", why);
             }
+            self.update();
         }
-
 
         println!("");
         let result = match self.winner {
